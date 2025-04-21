@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wallet Debit Entry</title>
+  <style>
+    body {
+      background-color: #1e1e1e;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: #2c2c2c;
+      padding: 30px;
+      border-radius: 10px;
+      width: 350px;
+      text-align: center;
+    }
+
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin: 10px 5px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Wallet Debit Entry</h2>
+  <input type="text" id="name" placeholder="Customer Name" />
+  <input type="number" id="amount" placeholder="Amount (₹)" />
+  <div>
+    <button onclick="submitEntry()">Submit & Print Receipt</button>
+    <button onclick="exportToExcel()">Export to Excel</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+  const entries = [];
+
+  function submitEntry() {
+    const name = document.getElementById('name').value.trim();
+    const amount = document.getElementById('amount').value.trim();
+    if (!name || !amount) {
+      alert("All fields are required.");
+      return;
+    }
+
+    const date = new Date().toLocaleString();
+    entries.push([name, amount, date]);
+
+    const receiptHTML = `
+      <div style="font-family: monospace; padding: 20px;">
+        <pre>
+-------------------------------
+        PAYMENT RECEIPT
+-------------------------------
+Name: ${name}
+Amount: ₹${amount}
+Date: ${date}
+
+Thank you for your payment!
+        </pre>
+      </div>
+    `;
+
+    // Create a new window and print
+    const printWindow = window.open('', '', 'height=600,width=400');
+    printWindow.document.write('<html><head><title>Print Receipt</title></head><body>');
+    printWindow.document.write(receiptHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+
+    document.getElementById('name').value = "";
+    document.getElementById('amount').value = "";
+    alert("Receipt printed successfully.");
+  }
+
+  function exportToExcel() {
+    const password = prompt("Enter password to export the Excel report:");
+    const correctPassword = "98799";
+
+    if (password !== correctPassword) {
+      alert("Incorrect password. Access denied.");
+      return;
+    }
+
+    if (entries.length === 0) {
+      alert("No data to export.");
+      return;
+    }
+
+    const worksheet = XLSX.utils.aoa_to_sheet([["Name", "Amount", "Date"], ...entries]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Wallet Report");
+    XLSX.writeFile(workbook, "wallet_report.xlsx");
+  }
+</script>
+
+</body>
+</html>
